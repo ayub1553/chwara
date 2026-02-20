@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dots and Boxes - Pro Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --p1-color: #007AFF; --p2-color: #FF3B30; --bg-color: #f0f4f8; --accent: #1a1a1a; }
+
+        body {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; margin: 0; background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif; overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-bar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+            background: white; border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 30px; box-sizing: border-box; z-index: 300;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-bar.hide { transform: translateY(-100%); }
+        .nav-title { font-weight: 900; letter-spacing: 2px; font-size: 1.1rem; position: absolute; left: 50%; transform: translateX(-50%); }
+        .nav-btn { background: #f1f3f5; border: none; padding: 10px 18px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.85rem; -webkit-tap-highlight-color: transparent; }
+
+        .side-panel {
+            position: fixed; top: 0; width: 340px; height: 100%;
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px);
+            box-shadow: 0 0 40px rgba(0,0,0,0.1); z-index: 400;
+            padding: 40px 30px; box-sizing: border-box; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column;
+        }
+        #panel-log { left: 0; transform: translateX(-100%); }
+        #panel-leader { right: 0; transform: translateX(100%); }
+        .panel-open { transform: translateX(0) !important; }
+
+        .size-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0 25px 0; }
+        .size-chip {
+            background: #f1f3f5; padding: 12px; border-radius: 14px; cursor: pointer;
+            border: 2px solid transparent; transition: 0.2s; font-weight: 800; color: #555; text-align: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .size-chip.active {
+            background: white; border-color: var(--accent); color: var(--accent);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(240, 244, 248, 0.8); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center; z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .overlay.show { 
+            opacity: 1; 
+            visibility: visible; 
+        }
+
+        .menu-card {
+            background: white; padding: 35px; border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1); text-align: center;
+            width: 380px; border: 1px solid rgba(0,0,0,0.05);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .overlay.show .menu-card {
+            transform: scale(1);
+        }
+
+        .data-list { flex-grow: 1; overflow-y: auto; text-align: left; margin: 20px 0; }
+        .log-item { background: #f8f9fa; padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid #ddd; animation: slideIn 0.3s ease; }
+        .leader-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; animation: slideIn 0.3s ease; }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .scoreboard { display: flex; gap: 15px; margin-bottom: 20px; width: 100%; max-width: 500px; }
+        .score-card { flex: 1; background: white; padding: 15px; border-radius: 20px; text-align: center; border: 3px solid transparent; transition: 0.3s; }
+        .score-card.active-p1 { border-color: var(--p1-color); }
+        .score-card.active-p2 { border-color: var(--p2-color); }
+        .player-score { font-size: 2.2rem; font-weight: 900; margin: 0; }
+        
+        input[type="text"] { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #eee; margin-bottom: 12px; font-weight: 600; box-sizing: border-box; font-family: inherit; transition: border-color 0.2s; }
+        input[type="text"]:focus { border-color: var(--accent); outline: none; }
+        
+        .btn-play { width: 100%; padding: 16px; border: none; border-radius: 16px; background: var(--accent); color: white; font-weight: 800; cursor: pointer; font-size: 1rem; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+        .btn-play:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .btn-play:active { transform: translateY(0); }
+        
+        .btn-danger { background: #fee2e2; color: #ef4444; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+        .btn-danger:hover { background: #fecaca; transform: translateY(-2px); }
+        
+        canvas { 
+            background: #fff; 
+            border-radius: 24px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1); 
+            cursor: pointer; 
+            touch-action: none;
+            display: block;
+            width: min(90vw, 500px);
+            height: min(90vw, 500px);
+          
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        #win-popup .menu-card {
+            text-align: center;
+        }
+        
+        #win-popup .trophy-icon {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            animation: bounce 0.5s ease;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .confirm-modal {
+            position: fixed;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <nav id="top-nav" class="nav-bar">
+        <button class="nav-btn" onclick="togglePanel('panel-log')">📜 HISTORY</button>
+        <div class="nav-title">DOTS & BOXES</div>
+        <button class="nav-btn" onclick="togglePanel('panel-leader')">🏆 LEADERS</button>
+    </nav>
+
+    <div id="panel-log" class="side-panel">
+        <h2 style="font-weight:900; margin-top:0;">Game History</h2>
+        <div id="log-list" class="data-list"></div>
+        <button class="btn-danger" onclick="openLogConfirm()">CLEAR HISTORY</button>
+        <button class="nav-btn" style="width:100%; margin-top:10px;" onclick="togglePanel('panel-log')">CLOSE</button>
+    </div>
+
+    <div id="panel-leader" class="side-panel">
+        <h2 style="font-weight:900; margin-top:0;">Top Players</h2>
+        <div id="leader-list" class="data-list"></div>
+        <button class="btn-danger" onclick="openLeaderConfirm()">RESET SCORES</button>
+        <button class="nav-btn" style="width:100%; margin-top:10px;" onclick="togglePanel('panel-leader')">CLOSE</button>
+    </div>
+
+    <div id="confirm-log-modal" class="overlay confirm-modal">
+        <div class="menu-card" style="width: 320px;">
+            <h2>Clear History?</h2>
+            <p style="font-size:0.9rem; color:#666; margin-bottom:25px;">This will wipe all game history permanently.</p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-play" style="background:#eee; color:#333;" onclick="closeLogConfirm()">CANCEL</button>
+                <button class="btn-play" style="background:#ef4444;" onclick="clearHistory()">CLEAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-leader-modal" class="overlay confirm-modal">
+        <div class="menu-card" style="width: 320px;">
+            <h2>Reset Scores?</h2>
+            <p style="font-size:0.9rem; color:#666; margin-bottom:25px;">This will reset all player points to zero.</p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-play" style="background:#eee; color:#333;" onclick="closeLeaderConfirm()">CANCEL</button>
+                <button class="btn-play" style="background:#ef4444;" onclick="resetLeaderboard()">RESET</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-reset-modal" class="overlay confirm-modal">
+        <div class="menu-card" style="width: 320px;">
+            <h2>Reset Game?</h2>
+            <p style="font-size:0.9rem; color:#666; margin-bottom:25px;">Do you really want to restart this match?</p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-play" style="background:#eee; color:#333;" onclick="closeResetConfirm()">CANCEL</button>
+                <button class="btn-play" style="background:#ef4444;" onclick="executeReset()">RESET</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-menu-modal" class="overlay confirm-modal">
+        <div class="menu-card" style="width: 320px;">
+            <h2>Return to Menu?</h2>
+            <p style="font-size:0.9rem; color:#666; margin-bottom:25px;">Current match progress will be lost.</p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-play" style="background:#eee; color:#333;" onclick="closeMenuConfirm()">CANCEL</button>
+                <button class="btn-play" style="background:#ef4444;" onclick="executeMenuReturn()">RETURN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-menu" class="overlay show">
+        <div class="menu-card">
+            <h2 style="font-weight:900; margin:0 0 20px 0;">New Game</h2>
+            <input type="text" id="p1-input" placeholder="Player 1 Name" value="Player 1">
+            <input type="text" id="p2-input" placeholder="Player 2 Name" value="Player 2">
+            
+            <p style="font-weight:800; font-size:0.7rem; color:#888; text-transform:uppercase; margin-top:15px; text-align:left;">Select Board Size</p>
+            <div class="size-container">
+                <div class="size-chip active" onclick="setGrid(4, this)">4x4</div>
+                <div class="size-chip" onclick="setGrid(6, this)">6x6</div>
+                <div class="size-chip" onclick="setGrid(8, this)">8x8</div>
+            </div>
+            
+            <button class="btn-play" onclick="startGame()">START MATCH</button>
+        </div>
+    </div>
+
+    <div id="win-popup" class="overlay">
+        <div class="menu-card">
+            <div class="trophy-icon">🏆</div>
+            <h2 id="win-name" style="margin:0;"></h2>
+            <div id="win-stats" style="font-size: 2rem; font-weight:900; margin:10px 0;"></div>
+            <div id="win-diff" style="color:#27ae60; font-weight:800; margin-bottom:20px;"></div>
+            <button class="btn-play" onclick="closeWinPopup()">BACK TO MENU</button>
+        </div>
+    </div>
+
+   <div id="game-ui" class="hidden">
+    <div style="display:flex; gap:12px; margin-bottom:20px; width:100%; max-width:500px;">
+        <button class="nav-btn" style="flex:1; background:#fff3cd;" onclick="openResetConfirm()">🔄 RESET GAME</button>
+        <button class="nav-btn" style="flex:1; background:#e8f0fe;" onclick="openMenuConfirm()">🏠 MAIN MENU</button>
+    </div>
+</div>
+
+    <div class="scoreboard">
+        <div id="card-p1" class="score-card"><div id="name-p1" style="font-weight:800; font-size:0.7rem;">P1</div><div class="player-score" id="score-p1">0</div></div>
+        <div id="card-p2" class="score-card"><div id="name-p2" style="font-weight:800; font-size:0.7rem;">P2</div><div class="player-score" id="score-p2">0</div></div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+    
+const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    ctx.imageSmoothingEnabled = false;
+    
+    let GRID_SIZE = 4, CELL_SIZE, OFFSET, DOT_RADIUS, LINE_WIDTH;
+   function setupHighDPICanvas() {
+    const dpr = window.devicePixelRatio || 1;       
+    const size = Math.min(window.innerWidth * 0.9, 500); t
+
+    canvas.style.width = size + 'px';  
+    canvas.style.height = size + 'px';
+
+    canvas.width = size * dpr;         
+    canvas.height = size * dpr;
+
+    ctx.scale(dpr, dpr);             
+}
+
+    let players = [{ name: "P1", color: "#007AFF", score: 0 }, { name: "P2", color: "#FF3B30", score: 0 }];
+    let currentPlayer = 0, lines = [], boxes = [], dotOwners = [], gameActive = false, gameOver = false, hoveredLine = null;
+
+    document.addEventListener('touchstart', (e) => {
+        if (e.target === canvas) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchend', (e) => {
+        if (e.target === canvas) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    function togglePanel(id) {
+        const panel = document.getElementById(id);
+        const isOpen = panel.classList.contains('panel-open');
+        document.querySelectorAll('.side-panel').forEach(p => p.classList.remove('panel-open'));
+        if (!isOpen) {
+            panel.classList.add('panel-open');
+            if (id === 'panel-log') updateLogUI();
+            if (id === 'panel-leader') updateLeaderUI();
+        }
+    }
+
+    function openLogConfirm() {
+        document.getElementById('confirm-log-modal').classList.add('show');
+    }
+    
+    function closeLogConfirm() {
+        document.getElementById('confirm-log-modal').classList.remove('show');
+    }
+    
+    function clearHistory() {
+        localStorage.removeItem('dots_history');
+        closeLogConfirm();
+        updateLogUI();
+    }
+
+    function openLeaderConfirm() {
+        document.getElementById('confirm-leader-modal').classList.add('show');
+    }
+    
+    function closeLeaderConfirm() {
+        document.getElementById('confirm-leader-modal').classList.remove('show');
+    }
+    
+    function resetLeaderboard() {
+        localStorage.removeItem('dots_leaders');
+        closeLeaderConfirm();
+        updateLeaderUI();
+    }
+
+    function openResetConfirm() {
+        document.getElementById('confirm-reset-modal').classList.add('show');
+    }
+    
+    function closeResetConfirm() {
+        document.getElementById('confirm-reset-modal').classList.remove('show');
+    }
+    
+    function executeReset() {
+        resetMatch();
+        closeResetConfirm();
+    }
+
+    function openMenuConfirm() {
+        document.getElementById('confirm-menu-modal').classList.add('show');
+    }
+    
+    function closeMenuConfirm() {
+        document.getElementById('confirm-menu-modal').classList.remove('show');
+    }
+    
+    function executeMenuReturn() {
+        resetMatch();
+        
+        closeMenuConfirm();
+        
+        setTimeout(() => {
+            document.getElementById('main-menu').classList.add('show');
+            
+            document.getElementById('game-ui').classList.add('hidden');
+            
+            document.getElementById('top-nav').classList.remove('hide');
+            
+            gameActive = false;
+            
+            hoveredLine = null;
+            
+            document.getElementById('p1-input').value = "Player 1";
+            document.getElementById('p2-input').value = "Player 2";
+            
+            GRID_SIZE = 4;
+            document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+            document.querySelector('.size-chip').classList.add('active');
+            
+        }, 300);
+    }
+
+    function closeWinPopup() {
+        const popup = document.getElementById('win-popup');
+        popup.classList.remove('show');
+        
+        resetMatch();
+        
+        setTimeout(() => {
+            document.getElementById('main-menu').classList.add('show');
+            document.getElementById('top-nav').classList.remove('hide');
+            document.getElementById('game-ui').classList.add('hidden');
+            gameActive = false;
+        }, 300);
+    }
+
+    function setGrid(val, el) { 
+        GRID_SIZE = val; 
+        document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+function startGame() {
+        players[0].name = document.getElementById('p1-input').value || "Player 1";
+        players[1].name = document.getElementById('p2-input').value || "Player 2";
+        
+        resetMatch();
+        
+        document.getElementById('main-menu').classList.remove('show'); 
+        setTimeout(() => {
+            document.getElementById('top-nav').classList.add('hide');      
+            document.getElementById('game-ui').classList.remove('hidden');
+            setupHighDPICanvas();
+setupBoard();
+            setupBoard();
+            gameActive = true;
+            updateUI();
+            render();
+        }, 300);
+    }
+
+    function setupBoard() {
+        OFFSET = 50;
+    CELL_SIZE = (parseFloat(canvas.style.width) - (OFFSET * 2)) / (GRID_SIZE - 1);
+CELL_SIZE = Math.floor(CELL_SIZE); 
+        CELL_SIZE = Math.floor(CELL_SIZE);
+        
+       DOT_RADIUS = Math.max(5, Math.floor(15 - GRID_SIZE));
+LINE_WIDTH = Math.max(4, Math.floor(20 - GRID_SIZE));
+        lines = []; 
+        boxes = [];
+        dotOwners = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
+    }
+
+   
+   function handleCanvasInteraction(e) {
+    e.preventDefault();
+    if (!gameActive || gameOver) return;
+
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+
+    if (e.touches) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+    } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+    }
+
+    const canvasX = clientX - rect.left;
+    const canvasY = clientY - rect.top;
+
+    const line = getLineAt(canvasX, canvasY);
+
+    if (e.type === 'mousemove' || e.type === 'touchmove') {
+        hoveredLine = line;
+    } else if (e.type === 'mousedown' || e.type === 'touchstart') {
+        if (!line || lineExists(line)) return;
+
+        if (dotOwners[line.r1][line.c1] === null) dotOwners[line.r1][line.c1] = currentPlayer;
+        if (dotOwners[line.r2][line.c2] === null) dotOwners[line.r2][line.c2] = currentPlayer;
+
+        lines.push({ ...line, owner: currentPlayer, progress: 0 });
+        if (!checkForNewBoxes()) currentPlayer = 1 - currentPlayer;
+        updateUI();
+    }
+}
+    canvas.addEventListener('mousemove', handleCanvasInteraction);
+    canvas.addEventListener('mousedown', handleCanvasInteraction);
+    canvas.addEventListener('touchstart', handleCanvasInteraction, { passive: false });
+    canvas.addEventListener('touchmove', handleCanvasInteraction, { passive: false });
+    
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    function getLineAt(x, y) {
+    const t = Math.max(4, CELL_SIZE / 12); 
+    for (let i = 0; i < GRID_SIZE; i++) {
+        for (let j = 0; j < GRID_SIZE; j++) {
+            let dx = OFFSET + i * CELL_SIZE, dy = OFFSET + j * CELL_SIZE;
+
+            if (i < GRID_SIZE - 1 && x > dx && x < dx + CELL_SIZE && Math.abs(y - dy) < t)
+                return { r1: j, c1: i, r2: j, c2: i + 1, type: 'H' };
+
+         
+            if (j < GRID_SIZE - 1 && y > dy && y < dy + CELL_SIZE && Math.abs(x - dx) < t)
+                return { r1: j, c1: i, r2: j + 1, c2: i, type: 'V' };
+        }
+    }
+    return null;
+}
+    function lineExists(l) { return lines.some(ln => ln.r1 === l.r1 && ln.c1 === l.c1 && ln.type === l.type); }
+    
+    function checkForNewBoxes() {
+        let scored = false;
+        for (let r = 0; r < GRID_SIZE - 1; r++) {
+            for (let c = 0; c < GRID_SIZE - 1; c++) {
+                if (!boxes.some(b => b.r === r && b.c === c) && isBoxComplete(r, c)) {
+                    boxes.push({ r, c, owner: currentPlayer, fillProgress: 0 });
+                    players[currentPlayer].score++;
+                    scored = true;
+                }
+            }
+        }
+        return scored;
+    }
+
+    function isBoxComplete(r, c) {
+        return lineExists({r1:r, c1:c, type:'H'}) && lineExists({r1:r+1, c1:c, type:'H'}) &&
+               lineExists({r1:r, c1:c, type:'V'}) && lineExists({r1:r, c1:c+1, type:'V'});
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+       
+        boxes.forEach(b => {
+            if (b.fillProgress < 1) b.fillProgress += 0.06;
+            const boxX = OFFSET + b.c * CELL_SIZE, boxY = OFFSET + b.r * CELL_SIZE;
+            const center_x = boxX + CELL_SIZE / 2, center_y = boxY + CELL_SIZE / 2;
+            const maxRadius = (CELL_SIZE * 1.42) / 2; 
+
+            ctx.save();
+            ctx.beginPath(); 
+            ctx.rect(boxX, boxY, CELL_SIZE, CELL_SIZE); 
+            ctx.clip();
+            ctx.fillStyle = players[b.owner].color + "33";
+            ctx.beginPath(); 
+            ctx.arc(center_x, center_y, maxRadius * b.fillProgress, 0, Math.PI * 2); 
+            ctx.fill();
+            ctx.restore();
+
+            if (b.fillProgress > 0.4) {
+                ctx.fillStyle = players[b.owner].color;
+                ctx.textAlign = "center"; 
+                ctx.textBaseline = "middle";
+                ctx.font = `900 ${Math.floor(CELL_SIZE * 0.5)}px 'Inter'`;
+                ctx.fillText(b.owner === 0 ? "1" : "2", Math.floor(center_x), Math.floor(center_y));
+            }
+        });
+
+       
+        for (let i = 0; i < GRID_SIZE; i++) {
+            for (let j = 0; j < GRID_SIZE; j++) {
+                if (i < GRID_SIZE-1) drawLine({r1:j, c1:i, r2:j, c2:i+1}, "#f1f3f5", 1, false);
+                if (j < GRID_SIZE-1) drawLine({r1:j, c1:i, r2:j+1, c2:i}, "#f1f3f5", 1, false);
+            }
+        }
+
+    
+        if (hoveredLine && !lineExists(hoveredLine)) drawLine(hoveredLine, "#e9ecef", 1, false);
+        
+        lines.forEach(l => { 
+            if (l.progress < 1) l.progress += 0.2; 
+            drawLine(l, players[l.owner].color, l.progress, true); 
+        });
+
+        
+        for (let i = 0; i < GRID_SIZE; i++) {
+            for (let j = 0; j < GRID_SIZE; j++) {
+                const dx = OFFSET + i * CELL_SIZE, dy = OFFSET + j * CELL_SIZE;
+                const owner = dotOwners[j][i];
+                
+                
+                ctx.beginPath(); 
+                ctx.arc(dx, dy, DOT_RADIUS, 0, Math.PI * 2); 
+                
+                if (owner !== null) {
+                    ctx.fillStyle = players[owner].color;
+                    ctx.fill();
+                    ctx.strokeStyle = "#000000";
+                    ctx.lineWidth = 2.5; 
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fill();
+                    ctx.strokeStyle = "#000000";
+                    ctx.lineWidth = 2.5; 
+                    ctx.stroke();
+                }
+            }
+        }
+
+        if (boxes.length === (GRID_SIZE - 1) ** 2 && !gameOver) saveAndShowVictory();
+        requestAnimationFrame(render);
+    }
+
+    function drawLine(l, col, prog, isPlaying = false) {
+        const x1 = OFFSET + l.c1 * CELL_SIZE, y1 = OFFSET + l.r1 * CELL_SIZE;
+        const x2 = OFFSET + (l.c2??l.c1) * CELL_SIZE, y2 = OFFSET + (l.r2??l.r1) * CELL_SIZE;
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+
+        ctx.strokeStyle = col; 
+        ctx.lineWidth = LINE_WIDTH; 
+        ctx.lineCap = "round";
+        
+        ctx.beginPath();
+        if (isPlaying && prog < 1) {
+
+            ctx.moveTo(Math.floor(mx + (x1 - mx) * prog), Math.floor(my + (y1 - my) * prog));
+            ctx.lineTo(Math.floor(mx + (x2 - mx) * prog), Math.floor(my + (y2 - my) * prog));
+        } else {
+            ctx.moveTo(Math.floor(x1), Math.floor(y1));
+            ctx.lineTo(Math.floor(x2), Math.floor(y2));
+        }
+        ctx.stroke();
+    }
+
+    function updateUI() {
+        document.getElementById('name-p1').innerText = players[0].name.toUpperCase();
+        document.getElementById('score-p1').innerText = players[0].score;
+        document.getElementById('name-p2').innerText = players[1].name.toUpperCase();
+        document.getElementById('score-p2').innerText = players[1].score;
+        document.getElementById('card-p1').className = `score-card ${currentPlayer === 0 ? 'active-p1' : ''}`;
+        document.getElementById('card-p2').className = `score-card ${currentPlayer === 1 ? 'active-p2' : ''}`;
+    }
+
+    function saveAndShowVictory() {
+        gameOver = true;
+        const s1 = players[0].score, s2 = players[1].score;
+        let history = JSON.parse(localStorage.getItem('dots_history') || '[]');
+        history.unshift({ date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), p1:players[0].name, s1, p2:players[1].name, s2 });
+        localStorage.setItem('dots_history', JSON.stringify(history.slice(0, 20)));
+
+        let leaders = JSON.parse(localStorage.getItem('dots_leaders') || '{}');
+        leaders[players[0].name] = (leaders[players[0].name] || 0) + s1;
+        leaders[players[1].name] = (leaders[players[1].name] || 0) + s2;
+        localStorage.setItem('dots_leaders', JSON.stringify(leaders));
+
+        setTimeout(() => {
+            document.getElementById('win-popup').classList.add('show');
+            document.getElementById('win-stats').innerText = `${s1} - ${s2}`;
+            if (s1 === s2) {
+                document.getElementById('win-name').innerText = "IT'S A DRAW!";
+                document.getElementById('win-diff').innerText = "Perfectly balanced.";
+            } else {
+                const win = s1 > s2 ? players[0].name : players[1].name;
+                document.getElementById('win-name').innerText = win.toUpperCase() + " WINS!";
+                document.getElementById('win-diff').innerText = `Victory by ${Math.abs(s1-s2)} squares`;
+            }
+        }, 500);
+    }
+
+    function updateLogUI() {
+        const history = JSON.parse(localStorage.getItem('dots_history') || '[]');
+        document.getElementById('log-list').innerHTML = history.length ? history.map(h => `<div class="log-item"><b>${h.p1}</b> vs <b>${h.p2}</b><br><span style="color:#888; font-size:0.7rem;">${h.date} ${h.time}</span><br>Result: ${h.s1}-${h.s2}</div>`).join('') : '<p style="text-align:center; color:#999;">Empty History</p>';
+    }
+
+    function updateLeaderUI() {
+        const leaders = JSON.parse(localStorage.getItem('dots_leaders') || '{}');
+        const sorted = Object.entries(leaders).sort((a,b) => b[1] - a[1]);
+        document.getElementById('leader-list').innerHTML = sorted.length ? sorted.map(([name, score], i) => `<div class="leader-item"><span>#${i+1} ${name}</span><b>${score} pts</b></div>`).join('') : '<p style="text-align:center; color:#999;">No points earned yet</p>';
+    }
+   
+   function resetMatch() {
+        players[0].score = 0;
+        players[1].score = 0;
+        
+        currentPlayer = 0;
+        gameOver = false;
+        
+        lines = [];
+        boxes = [];
+        dotOwners = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
+        
+        updateUI();
+        
+        document.getElementById('win-popup').classList.remove('show');
+        
+        hoveredLine = null;
+    }
+</script>
+   
+</body>
+</html>
