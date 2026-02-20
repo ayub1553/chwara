@@ -249,7 +249,7 @@ const canvas = document.getElementById('gameCanvas');
     let GRID_SIZE = 4, CELL_SIZE, OFFSET, DOT_RADIUS, LINE_WIDTH;
    function setupHighDPICanvas() {
     const dpr = window.devicePixelRatio || 1;       
-    const size = Math.min(window.innerWidth * 0.9, 500); t
+    const size = Math.min(window.innerWidth * 0.9, 500); 
 
     canvas.style.width = size + 'px';  
     canvas.style.height = size + 'px';
@@ -393,25 +393,27 @@ function startGame() {
             document.getElementById('game-ui').classList.remove('hidden');
             setupHighDPICanvas();
 setupBoard();
-            setupBoard();
+        
             gameActive = true;
             updateUI();
             render();
         }, 300);
     }
 
-    function setupBoard() {
-        OFFSET = 50;
-    CELL_SIZE = (parseFloat(canvas.style.width) - (OFFSET * 2)) / (GRID_SIZE - 1);
-CELL_SIZE = Math.floor(CELL_SIZE); 
-        CELL_SIZE = Math.floor(CELL_SIZE);
-        
-       DOT_RADIUS = Math.max(5, Math.floor(15 - GRID_SIZE));
-LINE_WIDTH = Math.max(4, Math.floor(20 - GRID_SIZE));
-        lines = []; 
-        boxes = [];
-        dotOwners = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
-    }
+ function setupBoard() {
+    OFFSET = 50;
+  
+    const dpr = window.devicePixelRatio || 1;
+    CELL_SIZE = (canvas.width / dpr - OFFSET * 2) / (GRID_SIZE - 1);
+    CELL_SIZE = Math.floor(CELL_SIZE);
+
+    DOT_RADIUS = Math.max(5, Math.floor(15 - GRID_SIZE));
+    LINE_WIDTH = Math.max(4, Math.floor(20 - GRID_SIZE));
+
+    lines = []; 
+    boxes = [];
+    dotOwners = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
+}
 
    
    function handleCanvasInteraction(e) {
