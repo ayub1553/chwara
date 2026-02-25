@@ -3,11 +3,12 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"assets/AssetManifest.bin": "f955f684ee5573ec4135f7e85e7aa161",
-"assets/AssetManifest.bin.json": "d50cb3718c3623971cb9106e0e9e7b99",
+const RESOURCES = {"assets/AssetManifest.bin": "0df1ae951ed17aeae2b77d3ed7020274",
+"assets/AssetManifest.bin.json": "1543f68ce4c52a53a4388f704964ae5e",
 "assets/assets/fonts/rudawbold.ttf": "f19f6dc33473669d8e24a6a0c3796299",
 "assets/assets/fonts/rudawregular2.ttf": "a18d5685fac011f6fa82f46d62982c7c",
 "assets/assets/images/logo_CHWARA.png": "a773e8b26fc2eea546c5f749907269ac",
+"assets/assets/images/logo_CHWARA2.png": "1df5288b3fdbf1c3db88e3efaac9fcb5",
 "assets/FontManifest.json": "b45733198b25972c721bef9606ca6fbd",
 "assets/fonts/MaterialIcons-Regular.otf": "32f1aa96cb951f372945cd4927c77aa0",
 "assets/NOTICES": "feddda8eae31b5e49f307700df80437b",
@@ -25,16 +26,16 @@ const RESOURCES = {"assets/AssetManifest.bin": "f955f684ee5573ec4135f7e85e7aa161
 "canvaskit/skwasm_heavy.js": "740d43a6b8240ef9e23eed8c48840da4",
 "canvaskit/skwasm_heavy.js.symbols": "0755b4fb399918388d71b59ad390b055",
 "canvaskit/skwasm_heavy.wasm": "b0be7910760d205ea4e011458df6ee01",
-"favicon.png": "a773e8b26fc2eea546c5f749907269ac",
+"favicon.png": "1df5288b3fdbf1c3db88e3efaac9fcb5",
 "flutter.js": "24bc71911b75b5f8135c949e27a2984e",
-"flutter_bootstrap.js": "89242a3a3e972982db0789fcf5f0612a",
+"flutter_bootstrap.js": "fdbe9dffbce4e974a8af6b1a85e2a307",
 "icons/Icon-192.png": "08bf5b58c95b97011d2acfd031481182",
 "icons/Icon-512.png": "4c83729441b0945a3a7f43c61201491a",
 "icons/Icon-maskable-192.png": "08bf5b58c95b97011d2acfd031481182",
 "icons/Icon-maskable-512.png": "4c83729441b0945a3a7f43c61201491a",
 "index.html": "fca47da8148a08df6c252a7fe82688ea",
 "/": "fca47da8148a08df6c252a7fe82688ea",
-"main.dart.js": "a781eda9c783ea6c8512d10a0b131764",
+"main.dart.js": "c7bc689dd62da5fa52799e1d8d2464f4",
 "manifest.json": "58a33806536e805dd219faf2554e0e7a",
 "version.json": "43d2be82732852c790567719451d9312"};
 // The application shell files that are downloaded before a service worker can
