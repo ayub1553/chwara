@@ -1,3 +1,5 @@
+// ignore_for_file: curly_braces_in_flow_control_structures
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -42,21 +44,14 @@ class DotsAI {
     List<Move> allPossible = _getAllPossibleMoves(currentLines);
     if (allPossible.isEmpty) return null;
 
-    // 1. PRIORITY: CAPTURE (With a "Double-Cross" twist)
     List<Move> captures = allPossible.where((m) => _completesAnyBox(m, currentLines, boxes)).toList();
     if (captures.isNotEmpty) {
-      // If there's a long chain (3+ boxes), and we are at the last 2 boxes, 
-      // a 'God-Tier' AI might leave them for you to keep control. 
-      // For now, let's take all points with high efficiency.
       return _toLine(captures[_random.nextInt(captures.length)]);
     }
 
-    // 2. PRIORITY: THE OPENING (Avoid repetition)
-    // If board is < 20% full, pick a random edge move that doesn't create a threat
     if (currentLines.length < (gridSize * gridSize * 0.25)) {
       List<Move> openings = allPossible.where((m) {
         bool isEdge = m.r1 == 0 || m.r1 == gridSize - 1 || m.c1 == 0 || m.c1 == gridSize - 1;
-        // Don't put a second line in a box if we can help it
         return isEdge && _getAffectedBoxes(m, boxes).every((b) => _countSides(b, currentLines) == 0);
       }).toList();
       
@@ -65,16 +60,12 @@ class DotsAI {
       }
     }
 
-    // 3. PRIORITY: SAFE MOVES (No gift boxes)
-    // A move is safe if it doesn't leave any box with 3 sides.
     List<Move> safeMoves = allPossible.where((m) {
       return _getAffectedBoxes(m, boxes).every((box) => _countSides(box, currentLines) < 2);
     }).toList();
 
     if (safeMoves.isNotEmpty) {
-      // SHUFFLE ensures the AI doesn't play the same way every time
       safeMoves.shuffle();
-      // Prefer moves that don't even create a 2nd side
       List<Move> superSafe = safeMoves.where((m) => 
         _getAffectedBoxes(m, boxes).every((box) => _countSides(box, currentLines) == 0)
       ).toList();
@@ -82,12 +73,9 @@ class DotsAI {
       return _toLine(superSafe.isNotEmpty ? superSafe[0] : safeMoves[0]);
     }
 
-    // 4. PRIORITY: SACRIFICE MINIMIZATION (The Brain)
-    // If forced to give points, simulate the "Chain" to see which mistake is smallest.
     allPossible.sort((a, b) {
       int lossA = _calculateChainLoss(a, currentLines, boxes);
       int lossB = _calculateChainLoss(b, currentLines, boxes);
-      // If losses are equal, pick a random one
       if (lossA == lossB) return _random.nextBool() ? -1 : 1;
       return lossA.compareTo(lossB);
     });
@@ -95,15 +83,12 @@ class DotsAI {
     return _toLine(allPossible.first);
   }
 
-  // --- AI SIMULATOR ENGINE ---
-
   int _calculateChainLoss(Move m, List<Line> currentLines, List<Box> boxes) {
     List<Line> simLines = List.from(currentLines);
     simLines.add(_toLine(m));
     int score = 0;
     bool found;
     
-    // DFS Simulation: How many boxes can the opponent take after this move?
     do {
       found = false;
       for (var box in boxes) {
@@ -111,7 +96,7 @@ class DotsAI {
           _simulateBoxCompletion(box, simLines);
           score++;
           found = true;
-          break; // Opponent takes box and gets another move
+          break;
         }
       }
     } while (found);
@@ -124,8 +109,6 @@ class DotsAI {
     else if (!_exists(b.r, b.c, b.r + 1, b.c, lines)) lines.add(_toLine(Move(b.r, b.c, b.r + 1, b.c)));
     else if (!_exists(b.r, b.c + 1, b.r + 1, b.c + 1, lines)) lines.add(_toLine(Move(b.r, b.c + 1, b.r + 1, b.c + 1)));
   }
-
-  // --- UTILITIES ---
 
   List<Move> _getAllPossibleMoves(List<Line> lines) {
     List<Move> moves = [];
@@ -163,7 +146,6 @@ class DotsAI {
       AnimationController(vsync: vsync, duration: Duration.zero));
 }
 
-// Ensure you have a TestVSync or proper ticker provider for the AnimationControllers
 class TestVSync implements TickerProvider {
   const TestVSync();
   @override

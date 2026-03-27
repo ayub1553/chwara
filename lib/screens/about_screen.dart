@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, unnecessary_underscores
 
 import 'package:flutter/material.dart';
 
@@ -28,7 +28,6 @@ class AboutScreen extends StatelessWidget {
                 'assets/images/logo_CHWARA.png',
                 height: 150,
                 fit: BoxFit.contain,
-                // ignore: unnecessary_underscores
                 errorBuilder: (_, __, ___) => const Icon(
                   Icons.image_not_supported,
                   size: 60,

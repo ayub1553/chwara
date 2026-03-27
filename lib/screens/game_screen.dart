@@ -125,15 +125,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     });
   }
 
- void _triggerAiMove() {
+  void _triggerAiMove() {
     if (gameEnded) return;
 
-    // Fix: Added 'this' as the second argument
-    final ai = DotsAI(widget.gridSize, this); 
+    final ai = DotsAI(widget.gridSize, this);
     final move = ai.getBestMove(lines, boxes);
 
     if (move != null) {
-      // Mean AI "thinks" faster when it's about to crush you
       int thinkingTime = 400 + Random().nextInt(400);
 
       Future.delayed(Duration(milliseconds: thinkingTime), () {
@@ -141,6 +139,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       });
     }
   }
+
   Future<void> _checkWinner() async {
     if (boxes.every((b) => b.owner != null) && !gameEnded) {
       gameEnded = true;
@@ -224,7 +223,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     style: const TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16, 
+                      fontSize: 16,
                     ),
                   ),
                 ),
@@ -272,29 +271,39 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void _handleTap(Offset pos, double bSize) {
     if (widget.isVsAi && !isP1Turn) return;
     double sp = bSize / (widget.gridSize - 1);
+
+    int? bestR1, bestC1, bestR2, bestC2;
+    double minDistance = sp * 0.5;
+
     for (int i = 0; i < widget.gridSize; i++) {
       for (int j = 0; j < widget.gridSize; j++) {
         if (j < widget.gridSize - 1) {
-          if (Rect.fromLTRB(
-            j * sp + 10,
-            i * sp - 30,
-            (j + 1) * sp - 10,
-            i * sp + 30,
-          ).contains(pos)) {
-            _addLine(i, j, i, j + 1);
+          Offset midH = Offset((j + 0.5) * sp, i * sp);
+          double dist = (pos - midH).distance;
+          if (dist < minDistance) {
+            minDistance = dist;
+            bestR1 = i;
+            bestC1 = j;
+            bestR2 = i;
+            bestC2 = j + 1;
           }
         }
         if (i < widget.gridSize - 1) {
-          if (Rect.fromLTRB(
-            j * sp - 30,
-            i * sp + 10,
-            j * sp + 30,
-            (i + 1) * sp - 10,
-          ).contains(pos)) {
-            _addLine(i, j, i + 1, j);
+          Offset midV = Offset(j * sp, (i + 0.5) * sp);
+          double dist = (pos - midV).distance;
+          if (dist < minDistance) {
+            minDistance = dist;
+            bestR1 = i;
+            bestC1 = j;
+            bestR2 = i + 1;
+            bestC2 = j;
           }
         }
       }
+    }
+
+    if (bestR1 != null) {
+      _addLine(bestR1, bestC1!, bestR2!, bestC2!);
     }
   }
 
@@ -353,7 +362,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   width: double.infinity,
                   color: Colors.white10,
                 ),
-               
+
                 AnimatedAlign(
                   duration: const Duration(milliseconds: 400),
                   curve: Curves.easeOutCubic,
@@ -383,7 +392,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         child: GestureDetector(
           onTapDown: (d) => _handleTap(d.localPosition, bSize),
           child: SizedBox(
-            
             width: bSize,
             height: bSize,
             child: AnimatedBuilder(

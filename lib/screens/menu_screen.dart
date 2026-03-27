@@ -80,87 +80,84 @@ class _MenuScreenState extends State<MenuScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundGrey,
-  appBar: AppBar(
-  elevation: 0,
-  centerTitle: true,
-  backgroundColor: Colors.transparent,
-  foregroundColor: Colors.white,
-  
-  // Red to Blue Gradient
-  flexibleSpace: Container(
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [
-          Color(0xFFFF416C), // Vibrant Red
-          Color(0xFF396AFC), // Deep Blue
-        ],
-      ),
-    ),
-  ),
+      appBar: AppBar(
+        elevation: 0,
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
 
-  title: const Text(
-    "چوارە",
-    style: TextStyle(
-      fontWeight: FontWeight.w900,
-      letterSpacing: 1.2,
-      fontSize: 24,
-    ),
-  ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [Color(0xFFFF416C), Color(0xFF396AFC)],
+            ),
+          ),
+        ),
 
-  // Leaderboard Icon
-  leading: Padding(
-    padding: const EdgeInsets.only(left: 16.0),
-    child: Builder(
-      builder: (ctx) => IconButton(
-        hoverColor: Colors.transparent,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        icon: const Icon(Icons.leaderboard),
-        onPressed: () => Scaffold.of(ctx).openDrawer(),
-      ),
-    ),
-  ),
+        title: const Text(
+          "چوارە",
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+            fontSize: 24,
+          ),
+        ),
 
-  // Info Icon with Slide-from-LEFT Transition
-  actions: [
-    Padding(
-      padding: const EdgeInsets.only(right: 16.0),
-      child: IconButton(
-        hoverColor: Colors.transparent,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        icon: const Icon(Icons.info_outline),
-        onPressed: () {
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              transitionDuration: const Duration(milliseconds: 400),
-              pageBuilder: (context, animation, secondaryAnimation) => const AboutScreen(),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                // Offset(-1.0, 0.0) makes it start from the LEFT edge
-                const begin = Offset(-1.0, 0.0); 
-                const end = Offset.zero;
-                const curve = Curves.easeOutCubic;
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: Builder(
+            builder: (ctx) => IconButton(
+              hoverColor: Colors.transparent,
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              icon: const Icon(Icons.leaderboard),
+              onPressed: () => Scaffold.of(ctx).openDrawer(),
+            ),
+          ),
+        ),
 
-                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                var offsetAnimation = animation.drive(tween);
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: IconButton(
+              hoverColor: Colors.transparent,
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              icon: const Icon(Icons.info_outline),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    transitionDuration: const Duration(milliseconds: 400),
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        const AboutScreen(),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(-1.0, 0.0);
+                          const end = Offset.zero;
+                          const curve = Curves.easeOutCubic;
 
-                return SlideTransition(
-                  position: offsetAnimation,
-                  child: child,
+                          var tween = Tween(
+                            begin: begin,
+                            end: end,
+                          ).chain(CurveTween(curve: curve));
+                          var offsetAnimation = animation.drive(tween);
+
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
+                  ),
                 );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
-    ),
-  ],
-
-
-),    drawer: _buildDrawer(),
+      drawer: _buildDrawer(),
 
       body: SafeArea(
         child: SingleChildScrollView(
@@ -169,12 +166,9 @@ class _MenuScreenState extends State<MenuScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
-                child: Image.asset(
-                  'assets/images/logo_CHWARA.png',
-                  width: 300,
-                ),
+                child: Image.asset('assets/images/logo_CHWARA.png', width: 300),
               ),
-             
+
               SizedBox(
                 height: 40,
                 child: AnimatedSwitcher(
