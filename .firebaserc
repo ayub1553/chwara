@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "chwara-game"
+  },
+  "targets": {
+    "chwara-game": {
+      "hosting": {
+        "chwara-game": [
+          "chwara-v2"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
