@@ -26,7 +26,7 @@ class DotsAndBoxesApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'ChwaraFont', 
         textTheme: const TextTheme(
-          displayLarge: TextStyle(fontWeight: FontWeight.bold),
+          displayLarge: TextStyle(fontWeight: FontWeight.bold,fontFamily: 'ChwaraFont', ),
           bodyMedium: TextStyle(fontSize: 16.0),
         ),
       ),

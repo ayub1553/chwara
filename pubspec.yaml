@@ -29,10 +29,11 @@ flutter:
     - assets/fonts/
   
   fonts:
-    - family: 
+    - family: ChwaraFont
       fonts:
         - asset: assets/fonts/ir_rounded.ttf
           weight: 700
+
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true

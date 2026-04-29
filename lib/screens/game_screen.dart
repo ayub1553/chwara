@@ -540,6 +540,7 @@ Widget _buildProfessionalPlayer({
           duration: const Duration(milliseconds: 300),
           style: TextStyle(
             fontSize: 25,
+            fontFamily: 'ChwaraFont', 
             fontWeight: isActive ? FontWeight.w800 : FontWeight.w400,
             color: isActive ? Colors.white : Colors.white60,
             letterSpacing: 0.5,
