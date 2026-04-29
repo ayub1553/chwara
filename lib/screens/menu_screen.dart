@@ -685,7 +685,7 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
-  Widget _buildInputCard() {
+ Widget _buildInputCard() {
     final sizes = {4: "٤ x ٤", 6: "٦ x ٦", 8: "٨ x ٨"};
 
     OutlineInputBorder buildBorder(Color color) => OutlineInputBorder(
@@ -710,8 +710,14 @@ class _MenuScreenState extends State<MenuScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // یاریزانی یەکەم
           TextField(
             controller: _p1Controller,
+            onTap: () {
+              if (_p1Controller.text == "یاریزانی یەکەم") {
+                _p1Controller.clear();
+              }
+            },
             decoration: InputDecoration(
               labelText: "ناوی یاریزانی یەکەم",
               hintText: "یاریزانی یەکەم",
@@ -727,9 +733,15 @@ class _MenuScreenState extends State<MenuScreen> {
           ),
           const SizedBox(height: 16),
 
+          // یاریزانی دووەم
           TextField(
             controller: _p2Controller,
             enabled: !isAiMode,
+            onTap: () {
+              if (_p2Controller.text == "یاریزانی دووەم") {
+                _p2Controller.clear();
+              }
+            },
             decoration: InputDecoration(
               labelText: isAiMode ? "زیرەکی دەستکرد" : "ناوی یاریزانی دووەم",
               hintText: isAiMode ? "کۆمپیوتەر" : "یاریزانی دووەم",
@@ -751,7 +763,7 @@ class _MenuScreenState extends State<MenuScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 "یاریکردن لەگەڵ زیرەکی دەستکرد",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
@@ -759,7 +771,11 @@ class _MenuScreenState extends State<MenuScreen> {
                 value: isAiMode,
                 onChanged: (v) => setState(() {
                   isAiMode = v;
-                  if (v) _p2Controller.clear();
+                  if (v) {
+                    _p2Controller.clear();
+                  } else {
+                    _p2Controller.text = "یاریزانی دووەم";
+                  }
                 }),
               ),
             ],
@@ -864,5 +880,4 @@ class _MenuScreenState extends State<MenuScreen> {
         ],
       ),
     );
-  }
-}
+  }}

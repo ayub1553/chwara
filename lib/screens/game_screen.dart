@@ -268,31 +268,63 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
   }
 
+  // 1. Updated _handleTap with Outer Edge Forgiveness
   void _handleTap(Offset pos, double bSize) {
     if (widget.isVsAi && !isP1Turn) return;
     double sp = bSize / (widget.gridSize - 1);
 
     int? bestR1, bestC1, bestR2, bestC2;
-    double minDistance = sp * 0.5;
+
+    double minScore = 1.2;
 
     for (int i = 0; i < widget.gridSize; i++) {
       for (int j = 0; j < widget.gridSize; j++) {
+        // --- Horizontal Lines ---
         if (j < widget.gridSize - 1) {
-          Offset midH = Offset((j + 0.5) * sp, i * sp);
-          double dist = (pos - midH).distance;
-          if (dist < minDistance) {
-            minDistance = dist;
+          Offset mid = Offset((j + 0.5) * sp, i * sp);
+          double dx = (pos.dx - mid.dx) / (sp / 2);
+
+          double vTol = (i == 0 || i == widget.gridSize - 1)
+              ? (sp / 1.5)
+              : (sp / 3.0);
+          double dy = (pos.dy - mid.dy) / vTol;
+
+          double shapeWidth = pow(
+            1.0 - dx.abs().clamp(0.0, 1.0),
+            0.6,
+          ).toDouble();
+          double score = (dx.abs() > 1.0)
+              ? 2.0
+              : (dy.abs() / (shapeWidth + 0.001));
+
+          if (score < minScore) {
+            minScore = score;
             bestR1 = i;
             bestC1 = j;
             bestR2 = i;
             bestC2 = j + 1;
           }
         }
+
         if (i < widget.gridSize - 1) {
-          Offset midV = Offset(j * sp, (i + 0.5) * sp);
-          double dist = (pos - midV).distance;
-          if (dist < minDistance) {
-            minDistance = dist;
+          Offset mid = Offset(j * sp, (i + 0.5) * sp);
+          double dy = (pos.dy - mid.dy) / (sp / 2);
+
+          double hTol = (j == 0 || j == widget.gridSize - 1)
+              ? (sp / 1.5)
+              : (sp / 3.0);
+          double dx = (pos.dx - mid.dx) / hTol;
+
+          double shapeWidth = pow(
+            1.0 - dy.abs().clamp(0.0, 1.0),
+            0.6,
+          ).toDouble();
+          double score = (dy.abs() > 1.0)
+              ? 2.0
+              : (dx.abs() / (shapeWidth + 0.001));
+
+          if (score < minScore) {
+            minScore = score;
             bestR1 = i;
             bestC1 = j;
             bestR2 = i + 1;
@@ -390,17 +422,26 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       ),
       body: Center(
         child: GestureDetector(
-          onTapDown: (d) => _handleTap(d.localPosition, bSize),
-          child: SizedBox(
-            width: bSize,
-            height: bSize,
-            child: AnimatedBuilder(
-              animation: Listenable.merge([
-                ...lines.map((e) => e.controller),
-                ...boxes.map((e) => e.controller),
-              ]),
-              builder: (c, _) => CustomPaint(
-                painter: GamePainter(lines, boxes, widget.gridSize),
+          behavior: HitTestBehavior.translucent,
+          onTapDown: (details) {
+            // We subtract the 30px padding from the local position.
+            // This aligns the touch coordinates back to the (0,0) of the visual board.
+            _handleTap(details.localPosition - const Offset(30, 30), bSize);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(30),
+            color: Colors.transparent,
+            child: SizedBox(
+              width: bSize,
+              height: bSize,
+              child: AnimatedBuilder(
+                animation: Listenable.merge([
+                  ...lines.map((e) => e.controller),
+                  ...boxes.map((e) => e.controller),
+                ]),
+                builder: (c, _) => CustomPaint(
+                  painter: GamePainter(lines, boxes, widget.gridSize),
+                ),
               ),
             ),
           ),
