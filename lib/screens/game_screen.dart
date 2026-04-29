@@ -268,34 +268,29 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 1. Updated _handleTap with Outer Edge Forgiveness
   void _handleTap(Offset pos, double bSize) {
     if (widget.isVsAi && !isP1Turn) return;
     double sp = bSize / (widget.gridSize - 1);
 
     int? bestR1, bestC1, bestR2, bestC2;
-
-    double minScore = 1.2;
+    // Lower threshold means a tighter "eye" shape
+    double minScore = 1.0;
 
     for (int i = 0; i < widget.gridSize; i++) {
       for (int j = 0; j < widget.gridSize; j++) {
         // --- Horizontal Lines ---
         if (j < widget.gridSize - 1) {
           Offset mid = Offset((j + 0.5) * sp, i * sp);
+
+          // Normalized coordinates (-1 to 1) relative to line center
           double dx = (pos.dx - mid.dx) / (sp / 2);
+          double dy =
+              (pos.dy - mid.dy) / (sp / 4); // Thinner vertical tolerance
 
-          double vTol = (i == 0 || i == widget.gridSize - 1)
-              ? (sp / 1.5)
-              : (sp / 3.0);
-          double dy = (pos.dy - mid.dy) / vTol;
-
-          double shapeWidth = pow(
-            1.0 - dx.abs().clamp(0.0, 1.0),
-            0.6,
-          ).toDouble();
-          double score = (dx.abs() > 1.0)
-              ? 2.0
-              : (dy.abs() / (shapeWidth + 0.001));
+          // Eye-shape formula: x^2 + y^2 / (1 - x^2)
+          // This makes the vertical tolerance (dy) collapse as dx approaches the ends (1 or -1)
+          double weight = (1 - (dx * dx).clamp(0, 0.95));
+          double score = (dx * dx) + (dy * dy) / weight;
 
           if (score < minScore) {
             minScore = score;
@@ -306,22 +301,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           }
         }
 
+        // --- Vertical Lines ---
         if (i < widget.gridSize - 1) {
           Offset mid = Offset(j * sp, (i + 0.5) * sp);
+
+          double dx =
+              (pos.dx - mid.dx) / (sp / 4); // Thinner horizontal tolerance
           double dy = (pos.dy - mid.dy) / (sp / 2);
 
-          double hTol = (j == 0 || j == widget.gridSize - 1)
-              ? (sp / 1.5)
-              : (sp / 3.0);
-          double dx = (pos.dx - mid.dx) / hTol;
-
-          double shapeWidth = pow(
-            1.0 - dy.abs().clamp(0.0, 1.0),
-            0.6,
-          ).toDouble();
-          double score = (dy.abs() > 1.0)
-              ? 2.0
-              : (dx.abs() / (shapeWidth + 0.001));
+          double weight = (1 - (dy * dy).clamp(0, 0.95));
+          double score = (dy * dy) + (dx * dx) / weight;
 
           if (score < minScore) {
             minScore = score;
@@ -424,8 +413,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTapDown: (details) {
-            // We subtract the 30px padding from the local position.
-            // This aligns the touch coordinates back to the (0,0) of the visual board.
             _handleTap(details.localPosition - const Offset(30, 30), bSize);
           },
           child: Container(

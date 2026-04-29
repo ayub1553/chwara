@@ -45,42 +45,87 @@ class DotsAI {
     if (allPossible.isEmpty) return null;
 
     List<Move> captures = allPossible.where((m) => _completesAnyBox(m, currentLines, boxes)).toList();
+    
     if (captures.isNotEmpty) {
-      return _toLine(captures[_random.nextInt(captures.length)]);
-    }
-
-    if (currentLines.length < (gridSize * gridSize * 0.25)) {
-      List<Move> openings = allPossible.where((m) {
-        bool isEdge = m.r1 == 0 || m.r1 == gridSize - 1 || m.c1 == 0 || m.c1 == gridSize - 1;
-        return isEdge && _getAffectedBoxes(m, boxes).every((b) => _countSides(b, currentLines) == 0);
-      }).toList();
-      
-      if (openings.isNotEmpty) {
-        return _toLine(openings[_random.nextInt(openings.length)]);
+      Move? stubbornMove = _checkForDoubleCross(captures, currentLines, boxes, allPossible);
+      if (stubbornMove != null) {
+        return _toLine(stubbornMove);
       }
+
+      List<Move> smartCaptures = captures.where((m) => !_isGivingAwayControl(m, currentLines, boxes)).toList();
+      Move chosenMove = smartCaptures.isNotEmpty 
+          ? smartCaptures[_random.nextInt(smartCaptures.length)] 
+          : captures[_random.nextInt(captures.length)];
+          
+      return _toLine(chosenMove);
     }
 
-    List<Move> safeMoves = allPossible.where((m) {
-      return _getAffectedBoxes(m, boxes).every((box) => _countSides(box, currentLines) < 2);
-    }).toList();
+    List<Move> safeMoves = allPossible.where((m) => 
+      _getAffectedBoxes(m, boxes).every((box) => _countSides(box, currentLines) < 2)
+    ).toList();
 
     if (safeMoves.isNotEmpty) {
       safeMoves.shuffle();
-      List<Move> superSafe = safeMoves.where((m) => 
-        _getAffectedBoxes(m, boxes).every((box) => _countSides(box, currentLines) == 0)
-      ).toList();
-      
-      return _toLine(superSafe.isNotEmpty ? superSafe[0] : safeMoves[0]);
+      return _toLine(safeMoves[0]);
     }
 
-    allPossible.sort((a, b) {
-      int lossA = _calculateChainLoss(a, currentLines, boxes);
-      int lossB = _calculateChainLoss(b, currentLines, boxes);
-      if (lossA == lossB) return _random.nextBool() ? -1 : 1;
-      return lossA.compareTo(lossB);
-    });
-
+    allPossible.sort((a, b) => _calculateChainLoss(a, currentLines, boxes).compareTo(_calculateChainLoss(b, currentLines, boxes)));
     return _toLine(allPossible.first);
+  }
+
+  Move? _checkForDoubleCross(List<Move> captures, List<Line> currentLines, List<Box> boxes, List<Move> allPossible) {
+    for (var m in captures) {
+      List<Line> simLines = List.from(currentLines)..add(_toLine(m));
+      
+      int chainLength = 1;
+      List<Line> chainSim = List.from(simLines);
+      bool foundMore;
+      do {
+        foundMore = false;
+        var nextCaptures = _getAllPossibleMoves(chainSim)
+            .where((nm) => _completesAnyBox(nm, chainSim, boxes)).toList();
+        if (nextCaptures.isNotEmpty) {
+          chainSim.add(_toLine(nextCaptures.first));
+          chainLength++;
+          foundMore = true;
+        }
+      } while (foundMore);
+
+      if (chainLength >= 2) {
+        var currentChainCaptures = allPossible.where((nm) => _completesAnyBox(nm, currentLines, boxes)).toList();
+        
+        if (currentChainCaptures.length <= 2) {
+          List<Move> throwAwayMoves = allPossible.where((tm) => 
+            !_completesAnyBox(tm, currentLines, boxes) && 
+            _getAffectedBoxes(tm, boxes).every((b) => _countSides(b, currentLines) < 2)
+          ).toList();
+
+          if (throwAwayMoves.isNotEmpty) {
+            return throwAwayMoves[_random.nextInt(throwAwayMoves.length)];
+          }
+        }
+      }
+    }
+    return null;
+  }
+  int _calculateMinLossAfterChain(Move m, List<Line> currentLines, List<Box> boxes) {
+    List<Line> simLines = List.from(currentLines)..add(_toLine(m));
+    while (true) {
+      List<Move> chainMoves = _getAllPossibleMoves(simLines).where((nm) => _completesAnyBox(nm, simLines, boxes)).toList();
+      if (chainMoves.isEmpty) break;
+      simLines.add(_toLine(chainMoves.first));
+    }
+    List<Move> remaining = _getAllPossibleMoves(simLines);
+    if (remaining.isEmpty) return 0;
+    remaining.sort((a, b) => _calculateChainLoss(a, simLines, boxes).compareTo(_calculateChainLoss(b, simLines, boxes)));
+    return _calculateChainLoss(remaining.first, simLines, boxes);
+  }
+
+  bool _isGivingAwayControl(Move m, List<Line> currentLines, List<Box> boxes) {
+    List<Line> simLines = List.from(currentLines)..add(_toLine(m));
+    List<Move> nextPossible = _getAllPossibleMoves(simLines);
+    if (nextPossible.isEmpty) return false;
+    return nextPossible.every((nextMove) => _calculateChainLoss(nextMove, simLines, boxes) > 2);
   }
 
   int _calculateChainLoss(Move m, List<Line> currentLines, List<Box> boxes) {
