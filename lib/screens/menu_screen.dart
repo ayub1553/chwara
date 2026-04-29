@@ -710,7 +710,6 @@ class _MenuScreenState extends State<MenuScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // یاریزانی یەکەم
           TextField(
             controller: _p1Controller,
             onTap: () {
@@ -733,7 +732,6 @@ class _MenuScreenState extends State<MenuScreen> {
           ),
           const SizedBox(height: 16),
 
-          // یاریزانی دووەم
           TextField(
             controller: _p2Controller,
             enabled: !isAiMode,
